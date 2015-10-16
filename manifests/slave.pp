@@ -57,8 +57,7 @@
 # [*description*]
 #   Not required.  Description which will appear on the jenkins master UI.
 #
-# [*proxy_host*] = undef (default)
-# [*proxy_port*] = undef (default)
+# [*proxy_url*] = undef (default)
 #   If your environment requires a proxy host to download plugins it can be configured here
 #
 
@@ -95,8 +94,7 @@ class jenkins::slave (
   $labels                   = undef,
   $tool_locations           = undef,
   $install_java             = $jenkins::params::install_java,
-  $proxy_host               = undef,
-  $proxy_port               = undef,
+  $proxy_url                = undef,
   $ensure                   = 'running',
   $enable                   = true
 ) inherits jenkins::params {
@@ -140,8 +138,8 @@ class jenkins::slave (
     creates     => "${slave_home}/${client_jar}",
   ## needs to be fixed if you create another version..
     environment => [
-      "http_proxy=${proxy_host}:${proxy_port}",
-      "https_proxy=${proxy_host}:${proxy_port}"
+      "http_proxy=${proxy_url}",
+      "https_proxy=${proxy_url}"
     ]
   }
 
