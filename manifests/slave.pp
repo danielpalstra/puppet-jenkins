@@ -57,6 +57,9 @@
 # [*description*]
 #   Not required.  Description which will appear on the jenkins master UI.
 #
+# [*proxy_url*] = undef (default)
+#   If your environment requires a proxy host to download plugins it can be configured here
+#
 
 # === Examples
 #
@@ -91,6 +94,7 @@ class jenkins::slave (
   $labels                   = undef,
   $tool_locations           = undef,
   $install_java             = $jenkins::params::install_java,
+  $proxy_url                = undef,
   $ensure                   = 'running',
   $enable                   = true
 ) inherits jenkins::params {
@@ -127,12 +131,16 @@ class jenkins::slave (
   }
 
   exec { 'get_swarm_client':
-    command => "wget -O ${slave_home}/${client_jar} ${client_url}/${client_jar}",
-    path    => '/usr/bin:/usr/sbin:/bin:/usr/local/bin',
-    user    => $slave_user,
-  #refreshonly => true,
-    creates => "${slave_home}/${client_jar}",
+    command     => "wget -O ${slave_home}/${client_jar} ${client_url}/${client_jar}",
+    path        => '/usr/bin:/usr/sbin:/bin:/usr/local/bin',
+    user        => $slave_user,
+  #refreshonly  => true,
+    creates     => "${slave_home}/${client_jar}",
   ## needs to be fixed if you create another version..
+    environment => [
+      "http_proxy=${proxy_url}",
+      "https_proxy=${proxy_url}"
+    ]
   }
 
 # customizations based on the OS family
