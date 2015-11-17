@@ -59,7 +59,11 @@
 #
 # [*manage_client_jar*]
 #   Should the class download the client jar file from the web? Defaults to true.
-
+#
+# [*proxy_host*] = undef (default)
+# [*proxy_port*] = undef (default)
+#   If your environment requires a proxy host to download the swarm client it can be configured here
+#
 # === Examples
 #
 #  class { 'jenkins::slave':
@@ -94,6 +98,8 @@ class jenkins::slave (
   $tool_locations           = undef,
   $install_java             = $jenkins::params::install_java,
   $manage_client_jar        = true,
+  $proxy_host               = undef,
+  $proxy_port               = undef,
   $ensure                   = 'running',
   $enable                   = true,
   $source                   = undef,
@@ -109,6 +115,11 @@ class jenkins::slave (
   $quoted_ui_user = shellquote($ui_user)
   $quoted_ui_pass = shellquote($ui_pass)
 
+  if ($jenkins::proxy_host) {
+    $proxy_server = "${jenkins::proxy_host}:${jenkins::proxy_port}"
+  } else {
+    $proxy_server = undef
+  }
 
   if $install_java and ($::osfamily != 'Darwin') {
     # Currently the puppetlabs/java module doesn't support installing Java on
@@ -220,13 +231,17 @@ class jenkins::slave (
 
   if ($manage_client_jar) {
     exec { 'get_swarm_client':
-      command => $fetch_command,
-      path    => '/usr/bin:/usr/sbin:/bin:/usr/local/bin',
-      user    => $slave_user,
-      creates => "${slave_home}/${client_jar}",
-      cwd     => $slave_home,
+      command     => $fetch_command,
+      path        => '/usr/bin:/usr/sbin:/bin:/usr/local/bin',
+      user        => $slave_user,
+      creates     => "${slave_home}/${client_jar}",
+      cwd         => $slave_home,
+      environment => [
+        "http_proxy=${proxy_server}",
+        "https_proxy=${proxy_server}"
+      ]
       #refreshonly  => true,
-    ## needs to be fixed if you create another version..
+      ## needs to be fixed if you create another version..
     }
   }
 
